@@ -3,6 +3,7 @@ from itertools import takewhile
 from typing import Callable, Any, Generator, Optional, Collection
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 
 @dataclass
@@ -14,8 +15,9 @@ class IntervalTree:
     sorted_right: np.ndarray
 
     @staticmethod
-    def recurse(
-        base_case: Callable[[], Any], inductive_step: Callable[["IntervalTree"], Any]
+    def _get_recursive_function_on_tree(
+        inductive_step: Callable[["IntervalTree"], Any],
+        base_case: Callable[[], Any] = lambda: 0,
     ) -> Callable[[Optional["IntervalTree"]], Any]:
         def f(root):
             match root:
@@ -27,12 +29,12 @@ class IntervalTree:
         return f
 
     @staticmethod
-    def sort_by_start_ascending(l_intervals: np.ndarray):
-        return np.array(list(sorted(l_intervals, key=lambda a: a[0][0])))
+    def _sort_by_start_ascending(intervals: Collection[np.ndarray]) -> np.ndarray:
+        return np.array(list(sorted(intervals, key=lambda a: a[0][0])))
 
     @staticmethod
-    def sort_by_end_descending(l_intervals):
-        return np.array(list(sorted(l_intervals, key=lambda a: a[0][1], reverse=True)))
+    def _sort_by_end_descending(intervals: Collection[np.ndarray]) -> np.ndarray:
+        return np.array(list(sorted(intervals, key=lambda a: a[0][1], reverse=True)))
 
     @staticmethod
     def from_ndarray(intervals: np.ndarray):
@@ -60,8 +62,8 @@ class IntervalTree:
             IntervalTree._construct(
                 intervals[x_mid < intervals[:, 0, 0]]
             ),  # completely to the right of the mid
-            IntervalTree.sort_by_start_ascending(mid),
-            IntervalTree.sort_by_end_descending(mid),
+            IntervalTree._sort_by_start_ascending(mid),
+            IntervalTree._sort_by_end_descending(mid),
         )
 
     def __iter__(self):
@@ -77,31 +79,32 @@ class IntervalTree:
     def intervals(self):
         return self.sorted_left
 
-    def size(self):
-        _size = IntervalTree.recurse(
-            lambda: 0, lambda node: 1 + _size(node.left) + _size(node.right)
+    def node_count(self):
+        node_count_function = IntervalTree._get_recursive_function_on_tree(
+            lambda node: 1
+            + node_count_function(node.left)
+            + node_count_function(node.right),
         )
-        return _size(self)
+        return node_count_function(self)
 
     def depth(self):
-        _depth = IntervalTree.recurse(
-            lambda: 0, lambda node: 1 + max(_depth(node.left), _depth(node.right))
+        depth_function = IntervalTree._get_recursive_function_on_tree(
+            lambda node: 1 + max(depth_function(node.left), depth_function(node.right)),
         )
-        return _depth(self)
+        return depth_function(self)
 
     def __len__(self):
-        _n_intervals = IntervalTree.recurse(
-            lambda: 0,
+        interval_count_function = IntervalTree._get_recursive_function_on_tree(
             lambda node: len(node.intervals)
-            + _n_intervals(node.left)
-            + _n_intervals(node.right),
+            + interval_count_function(node.left)
+            + interval_count_function(node.right),
         )
-        return _n_intervals(self)
+        return interval_count_function(self)
 
-    def check_invariant(self):
+    def sanity_check(self):
         def inductive_step(root):
-            left = f(root.left)
-            right = f(root.right)
+            left = sanity_check_function(root.left)
+            right = sanity_check_function(root.right)
             x_mid = root.key
 
             if left is not None:
@@ -117,8 +120,10 @@ class IntervalTree:
                 IntervalTree._non_empty([left, right, root.intervals])
             )
 
-        f = IntervalTree.recurse(lambda: None, inductive_step)
-        f(self)
+        sanity_check_function = IntervalTree._get_recursive_function_on_tree(
+            lambda: None, inductive_step
+        )
+        sanity_check_function(self)
 
     @staticmethod
     def _non_empty(arrays: Collection[np.ndarray]):
@@ -152,11 +157,16 @@ class IntervalTree:
                             [root.intervals, interval[np.newaxis, :]]
                         )
                     )
-                    root.sorted_left = IntervalTree.sort_by_start_ascending(intervals)
-                    root.sorted_right = IntervalTree.sort_by_end_descending(intervals)
+                    root.sorted_left = IntervalTree._sort_by_start_ascending(intervals)
+                    root.sorted_right = IntervalTree._sort_by_end_descending(intervals)
                 return root
 
-    def insert(self, interval):
+    def insert(self, interval: ArrayLike):
+        interval = np.array(interval)
+        if interval.shape != (2, 2):
+            raise ValueError(
+                f"incorrect interval shape {interval.shape}, expected {(2, 2)}"
+            )
         IntervalTree._insert_impl(self, interval)
 
     @staticmethod
@@ -202,14 +212,7 @@ class IntervalTree:
     def enclosing_interval_search_impl(
         v: "IntervalTree", interval: tuple[float, float]
     ):
-        if v is None:
-            return
-        match v:
-            case None as root:
-                pass
-            case IntervalTree() as root:
-                l, r = interval
-                pass
+        raise NotImplementedError
 
     def overlapping_interval_search(self, interval):
         l, r = interval
