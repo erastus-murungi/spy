@@ -1,7 +1,5 @@
-import pytest
-
-from interval_tree import *
-from utils import gen_intervals
+from interval_tree import IntervalTree
+from interval_tree import gen_intervals
 
 
 class TestIntervalTree:
