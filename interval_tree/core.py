@@ -42,9 +42,13 @@ class IntervalTree:
             raise TypeError(
                 f"expected intervals to be of type np.ndarray not {type(intervals)}"
             )
-        if len(intervals.shape) != 3 or (intervals.shape[1] != intervals.shape[2] != 2):
+        if len(intervals.shape) != 3:
             raise ValueError(
-                f"expected intervals shape to be (_, 2, 2) not {intervals.shape}"
+                f"expected intervals shape have size 3 not {len(intervals.shape)}"
+            )
+        if intervals.shape[2] <= 1:
+            raise ValueError(
+                f"expected last axis to be > 1 shape have size 3 not {len(intervals.shape)}"
             )
         return IntervalTree._construct(intervals)
 

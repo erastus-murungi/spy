@@ -14,8 +14,18 @@ def gen_interval(x_min=-100, x_max=100, y_min=-100, y_max=100):
     return np.array([[x1, x2], [y, y]])
 
 
+def gen_interval_no_y(x_min=-100, x_max=100):
+    x1 = np.random.uniform(x_min, x_max)
+    x2 = np.random.uniform(x1, x_max)
+    return np.array([[x1, x2]])
+
+
 def gen_intervals(n, x_min=-100, x_max=100, y_min=-100, y_max=100) -> np.ndarray:
     return np.array([gen_interval(x_min, x_max, y_min, y_max) for _ in range(n)])
+
+
+def gen_intervals_no_y(n, x_min=-100, x_max=100) -> np.ndarray:
+    return np.array([gen_interval_no_y(x_min, x_max) for _ in range(n)])
 
 
 def plot_intervals(intervals):
