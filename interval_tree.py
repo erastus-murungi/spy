@@ -38,6 +38,14 @@ class IntervalTree:
 
     @staticmethod
     def from_ndarray(intervals: np.ndarray):
+        if not isinstance(intervals, np.ndarray):
+            raise TypeError(
+                f"expected intervals to be of type np.ndarray not {type(intervals)}"
+            )
+        if len(intervals.shape) != 3 or (intervals.shape[1] != intervals.shape[2] != 2):
+            raise ValueError(
+                f"expected intervals shape to be (_, 2, 2) not {intervals.shape}"
+            )
         return IntervalTree._construct(intervals)
 
     @staticmethod
