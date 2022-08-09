@@ -160,7 +160,7 @@ class IntervalTree:
                 )
             case IntervalTree() as root:
                 if interval[0, 1] < root.key:
-                    root.left = IntervalTree._insert_impl(root.left.i, interval)
+                    root.left = IntervalTree._insert_impl(root.left, interval)
                 elif interval[0, 0] > root.key:
                     root.right = IntervalTree._insert_impl(root.right, interval)
                 else:
@@ -180,6 +180,18 @@ class IntervalTree:
                 f"incorrect interval shape {interval.shape}, expected {(2, 2)}"
             )
         IntervalTree._insert_impl(self, interval)
+
+    @staticmethod
+    def find_conflicting_intervals(intervals: np.ndarray):
+        tree = IntervalTree.from_ndarray(intervals[0:1])
+        results = []
+        for interval in intervals[1:]:
+            conflicts = tuple(tree.overlapping_interval_search(interval[0]))
+            if len(conflicts) == 0:
+                continue
+            results.append((interval, conflicts))
+            tree.insert(interval)
+        return results
 
     @staticmethod
     def all_intervals_impl(root):
