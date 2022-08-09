@@ -152,7 +152,7 @@ class IntervalTree:
         )
 
     @staticmethod
-    def _insert_impl(root: "IntervalTree", interval):
+    def _insert_impl(root: Optional["IntervalTree"], interval):
         match root:
             case None as __:
                 return IntervalTree._new_node(
@@ -208,7 +208,7 @@ class IntervalTree:
 
     @staticmethod
     def overlapping_interval_search_impl(
-        v: "IntervalTree", interval: tuple[float, float]
+        v: Optional["IntervalTree"], interval: tuple[float, float]
     ) -> Generator[np.ndarray, None, None]:
         match v:
             case IntervalTree() as root:
